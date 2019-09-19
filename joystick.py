@@ -29,22 +29,19 @@ print("connected!\n")
 it = util.Iterator(board)
 it.start()
 
+time.sleep(.5)
+
 board.digital[SW_PIN].write(1)
 
 switch_in = board.get_pin(f'd:{SW_PIN}:i')
 x_axis_in = board.get_pin(f'a:{X_PIN}:i')
 y_axis_in = board.get_pin(f'a:{Y_PIN}:i')
 
-x_axis_in.enable_reporting()
-y_axis_in.enable_reporting()
-switch_in.enable_reporting()
-
-
 while True:
     print(f"X-axis: {x_axis_in.read()}\tY-axis: {y_axis_in.read()}\t\
             Switch: {switch_in.read()}", end='\r')
 
-    time.sleep(0.2)
+    time.sleep(0.1)
     # clear the line
     print(80*" ", end='\r')
 
