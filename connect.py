@@ -2,6 +2,10 @@ import serial.tools.list_ports
 import time
 from pyfirmata import Arduino, util
 
+LED_PIN_NUM = 13
+ON = 1
+OFF = 0
+
 ports = list(serial.tools.list_ports.comports())
 
 if len(ports) == 0:
@@ -15,21 +19,20 @@ for idx, p in enumerate(ports):
 
 port_num = int(input(f"Please enter the number for the Arduino port [0-{len(ports)-1}]: "))
 
-LED_PIN = 13
 
-print("\nConnecting to the Arduino...")
-
+print("\nConnecting to the Arduino...", end='')
 board = Arduino(ports[port_num].device)
+print("connected!\n")
 
-print("Connected!\n")
+light = board.get_pin(f'd:{LED_PIN_NUM}:o')
 
 for n in range(4):
-    board.digital[LED_PIN].write(1)
+    light.write(ON)
     print(f"Light is: ON ", end="\r")
     
     time.sleep(1)
     
-    board.digital[LED_PIN].write(0)
+    light.write(OFF)
     print("Light is: OFF", end="\r")
     
     time.sleep(1)
