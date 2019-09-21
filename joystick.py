@@ -1,48 +1,66 @@
-import serial.tools.list_ports
-from pyfirmata import Arduino, util
-import time
+import asyncio
+from pymata_express.pymata_express import PymataExpress
 
 # Constants
 SW_PIN = 2  # Switch digital output
 X_PIN = 0  # X analog output
 Y_PIN = 1  # X analog output
 
-ports = list(serial.tools.list_ports.comports())
+# Hold last read pin values in storage. Values are keyed by the pin number.
+storage = {X_PIN: '512', Y_PIN: '512', SW_PIN: '1'}
+#  storage = {}
 
-if len(ports) == 0:
-    raise Exception("No ports found!")
 
-print("\nAvailable USB ports:\n")
-print("Port Number\tPort Name")
+async def print_callback(data):
+    """
+    A callback function to report switch changes.
+    :param data: [pin, current reported value, pin_mode, timestamp]
+    """
+    #  print('hey, someone called!')
+    #  storage = {}
+    storage[data[0]] = data[1]
+#
+    print(f'X-Axis: {storage[X_PIN]}, Y-Axis: {storage[Y_PIN]}, Switch: {storage[SW_PIN]}     ', end='\r')
+    #  print(90*' ', end='\r')
 
-for idx, p in enumerate(ports):
-    print(f"{idx}\t\t({p.device})")
 
-port_num = int(input(f"Please enter the number for the Arduino port \
-        [0-{len(ports)-1}]: "))
+async def analog_read(board, pin):
 
-print("\nConnecting to the Arduino...", end='')
-board = Arduino(ports[port_num].device)
-print("connected!\n")
+    await board.set_pin_mode_analog_input(pin, print_callback)
 
-# Setup
-it = util.Iterator(board)
-it.start()
+    while True:
+        await asyncio.sleep(1)
 
-time.sleep(.5)
 
-board.digital[SW_PIN].write(1)
+async def digital_pullup_read(board):
+    await board.set_pin_mode_digital_input_pullup(SW_PIN, callback=print_callback)
 
-switch_in = board.get_pin(f'd:{SW_PIN}:i')
-x_axis_in = board.get_pin(f'a:{X_PIN}:i')
-y_axis_in = board.get_pin(f'a:{Y_PIN}:i')
+    while True:
+        await asyncio.sleep(1)
 
-while True:
-    print(f"X-axis: {x_axis_in.read()}\tY-axis: {y_axis_in.read()}\t\
-            Switch: {switch_in.read()}", end='\r')
 
-    time.sleep(0.1)
-    # clear the line
-    print(80*" ", end='\r')
+async def main(board):
+    """
+    Processes the joystick analog and digital inputs
+     :param my_board: a pymata_express instance
+    """
+    x_pin_task = asyncio.create_task(analog_read(board, X_PIN))
+    y_pin_task = asyncio.create_task(analog_read(board, Y_PIN))
+    switch_task = asyncio.create_task(digital_pullup_read(board))
 
-print('\nDone!')
+    await x_pin_task
+    await y_pin_task
+    await switch_task
+
+    while True:
+        await asyncio.sleep(1)
+
+
+if __name__ == '__main__':
+    loop = asyncio.get_event_loop()
+    board = PymataExpress()
+
+    try:
+        loop.run_until_complete(main(board))
+    finally:
+        loop.run_until_complete(board.shutdown())
