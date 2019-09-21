@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "4b2db0e8d3a45e06e615717730083d48656008fed5f336f9dc541d283c3bfd55"
+            "sha256": "c00f9e1dcb237b64ff7ccc74f88c7964c8ed9a8ad2c2478e53569dbda403279d"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -23,6 +23,14 @@
             ],
             "index": "pypi",
             "version": "==1.1.0"
+        },
+        "pymata-express": {
+            "hashes": [
+                "sha256:694667d893e59305788b78f442db86d814a36c2d431532e94b78f8724798f205",
+                "sha256:c21bab03b5523edf41855b587e58c6c7cc0869be52fb897e85b46281a7bd2bd6"
+            ],
+            "index": "pypi",
+            "version": "==1.4"
         },
         "pyserial": {
             "hashes": [

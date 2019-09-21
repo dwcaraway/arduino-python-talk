@@ -9,6 +9,7 @@ verify_ssl = true
 pyusb = "*"
 pyserial = "*"
 pyfirmata = "*"
+pymata-express = "*"
 
 [requires]
 python_version = "3.7"
