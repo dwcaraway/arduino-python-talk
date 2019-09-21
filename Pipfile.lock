@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "c00f9e1dcb237b64ff7ccc74f88c7964c8ed9a8ad2c2478e53569dbda403279d"
+            "sha256": "892cd7633e6c4cfb4b6244e33f993b879712a07c3dc5afbe2dff0706c235c442"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -16,14 +16,6 @@
         ]
     },
     "default": {
-        "pyfirmata": {
-            "hashes": [
-                "sha256:03091ffd0b06a483d286d9738ead97a50c55cf1bf6b89a5bd0c420d0a7797420",
-                "sha256:cc180d1b30c85a2bbca62c15fef1b871db048cdcfa80959968356d97bd3ff08e"
-            ],
-            "index": "pypi",
-            "version": "==1.1.0"
-        },
         "pymata-express": {
             "hashes": [
                 "sha256:694667d893e59305788b78f442db86d814a36c2d431532e94b78f8724798f205",
@@ -37,15 +29,7 @@
                 "sha256:6e2d401fdee0eab996cf734e67773a0143b932772ca8b42451440cfed942c627",
                 "sha256:e0770fadba80c31013896c7e6ef703f72e7834965954a78e71a3049488d4d7d8"
             ],
-            "index": "pypi",
             "version": "==3.4"
-        },
-        "pyusb": {
-            "hashes": [
-                "sha256:4e9b72cc4a4205ca64fbf1f3fff39a335512166c151ad103e55c8223ac147362"
-            ],
-            "index": "pypi",
-            "version": "==1.0.2"
         }
     },
     "develop": {}
