@@ -1,6 +1,5 @@
 import asyncio
 import sys
-import time
 from pymata_express.pymata_express import PymataExpress
 
 
@@ -14,7 +13,7 @@ async def the_callback(data):
     the date and time when the change occurred
     :param data: [pin, current reported value, pin_mode, timestamp]
     """
-    print(f'Value: {data[1]}  ', end='\r')
+    print(f'Pin {data[0]}: {data[1]}  ', end='\r')
 
 
 async def digital_in(my_board, pin):
@@ -30,8 +29,6 @@ async def digital_in(my_board, pin):
     await my_board.set_pin_mode_digital_input_pullup(pin, callback=the_callback)
 
     while True:
-        # Do a read of the last value reported every 5 seconds and print it
-        # digital_read returns A tuple of last value change and the time that it occurred
         await my_board.digital_read(pin)
 
         while True:
