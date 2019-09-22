@@ -8,7 +8,6 @@ Y_PIN = 1  # X analog output
 
 # Hold last read pin values in storage. Values are keyed by the pin number.
 storage = {X_PIN: '512', Y_PIN: '512', SW_PIN: '1'}
-#  storage = {}
 
 
 async def print_callback(data):
@@ -16,24 +15,22 @@ async def print_callback(data):
     A callback function to report switch changes.
     :param data: [pin, current reported value, pin_mode, timestamp]
     """
-    #  print('hey, someone called!')
-    #  storage = {}
+
     storage[data[0]] = data[1]
-#
     print(f'X-Axis: {storage[X_PIN]}, Y-Axis: {storage[Y_PIN]}, Switch: {storage[SW_PIN]}     ', end='\r')
-    #  print(90*' ', end='\r')
 
 
 async def analog_read(board, pin):
 
-    await board.set_pin_mode_analog_input(pin, print_callback)
+    # Use a differential to avoid noise fluctuations on the analog
+    await board.set_pin_mode_analog_input(pin, callback=print_callback, differential=3)
 
     while True:
         await asyncio.sleep(1)
 
 
-async def digital_pullup_read(board):
-    await board.set_pin_mode_digital_input_pullup(SW_PIN, callback=print_callback)
+async def digital_pullup_read(board, pin):
+    await board.set_pin_mode_digital_input_pullup(pin, callback=print_callback)
 
     while True:
         await asyncio.sleep(1)
@@ -44,16 +41,11 @@ async def main(board):
     Processes the joystick analog and digital inputs
      :param my_board: a pymata_express instance
     """
-    x_pin_task = asyncio.create_task(analog_read(board, X_PIN))
-    y_pin_task = asyncio.create_task(analog_read(board, Y_PIN))
-    switch_task = asyncio.create_task(digital_pullup_read(board))
-
-    await x_pin_task
-    await y_pin_task
-    await switch_task
-
-    while True:
-        await asyncio.sleep(1)
+    await asyncio.gather(
+            analog_read(board, X_PIN),
+            analog_read(board, Y_PIN),
+            digital_pullup_read(board, SW_PIN),
+    )
 
 
 if __name__ == '__main__':
@@ -62,5 +54,9 @@ if __name__ == '__main__':
 
     try:
         loop.run_until_complete(main(board))
+    except KeyboardInterrupt:
+        # Currently we exit by using CTRL+C, so hide the error
+        pass
     finally:
+        print("\n\nShutting down")
         loop.run_until_complete(board.shutdown())
