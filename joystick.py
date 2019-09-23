@@ -9,7 +9,6 @@ Y_PIN = 1  # X analog output
 # Hold last read pin values in storage. Values are keyed by the pin number.
 storage = {X_PIN: '512', Y_PIN: '512', SW_PIN: '1'}
 
-
 async def print_callback(data):
     """
     A callback function to report switch changes.
