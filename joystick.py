@@ -15,15 +15,15 @@ async def print_callback(data):
     A callback function to report switch changes.
     :param data: [pin, current reported value, pin_mode, timestamp]
     """
-
     storage[data[0]] = data[1]
-    print(f'X-Axis: {storage[X_PIN]}, Y-Axis: {storage[Y_PIN]}, Switch: {storage[SW_PIN]}     ', end='\r')
+    print(f'X-Axis: {storage[X_PIN]}, Y-Axis: {storage[Y_PIN]}, '
+          f'Switch: {storage[SW_PIN]}     ', end='\r')
 
 
 async def analog_read(board, pin):
-
     # Use a differential to avoid noise fluctuations on the analog
-    await board.set_pin_mode_analog_input(pin, callback=print_callback, differential=3)
+    await board.set_pin_mode_analog_input(pin, callback=print_callback,
+                                          differential=3)
 
     while True:
         await asyncio.sleep(1)
@@ -45,7 +45,7 @@ async def main(board):
             analog_read(board, X_PIN),
             analog_read(board, Y_PIN),
             digital_pullup_read(board, SW_PIN),
-    )
+            )
 
 
 if __name__ == '__main__':
@@ -57,6 +57,3 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         # Currently we exit by using CTRL+C, so hide the error
         pass
-    finally:
-        print("\n\nShutting down")
-        loop.run_until_complete(board.shutdown())
