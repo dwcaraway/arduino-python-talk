@@ -1,29 +1,81 @@
+import time
 import asyncio
 import pygame
+from collections import namedtuple
+
+Color = namedtuple('Color', 'red green blue')
+Position = namedtuple('Position', 'x y')
 
 # Constants
 X_MAX = 500  # Max pixels, x-axis
 Y_MAX = 500  # Max pixels, y-axis
-BLUE = (0, 0, 255)
-BLACK = (0, 0, 0)
 FPS = 100
+BLUE = Color(red=0, green=0, blue=255)
+BLACK = Color(red=0, green=0, blue=0)
+DIR_UP = 'up'
+DIR_DOWN = 'down'
+DIR_LEFT = 'left'
+DIR_RIGHT = 'right'
 
 
 class Ball:
     """
     The ball object to manipulate
     """
-    def __init__(self):
-        self.previous_position = (0, 0)
-        self.current_position = (0, 0)
+    def __init__(self, window):
+        self.previous_positions = []
+        self.current_position = Position(x=50, y=50)
         self.color = BLUE
         self.bg_color = BLACK
+        self.radius = 20
+        self.window = window
+        self.trailing = False
+        self.velocity = 1
 
-    def move(self):
-        pass
+    def move(self, direction):
+
+        update = False
+        x, y = self.current_position
+
+        if direction == DIR_UP:
+            y -= self.velocity
+
+            if y >= self.radius - 1:
+                update = True
+
+        elif direction == DIR_DOWN:
+            y += self.velocity
+
+            if y <= Y_MAX - self.radius:
+                update = True
+
+        elif direction == DIR_LEFT:
+            x -= self.velocity
+
+            if x >= self.radius-1:
+                update = True
+
+        elif direction == DIR_RIGHT:
+            x += self.velocity
+
+            if x <= X_MAX - self.radius:
+                update = True
+        else:
+            raise Exception('Invalid direction')
+
+        if update:
+            self.previous_positions.push(self.current_position)
+            self.current_position = Position(x=x, y=y)
 
     def draw(self):
-        pass
+        pygame.draw.circle(self.window, self.color,
+                           self.current_position, self.radius)
+
+        if not self.trailing:
+            for position in self.previous_positions:
+                pygame.draw.circle(self.window, BLACK, position, self.radius)
+
+        self.previous_positions = []
 
 
 async def pygame_event_loop(event_queue):
@@ -36,108 +88,62 @@ async def pygame_event_loop(event_queue):
         event_queue.put_nowait(event)
 
 
-async def handle_events(event_queue):
+async def handle_events(event_queue, ball):
     while True:
         event = await event_queue.get()
+
         if event.type == pygame.QUIT:
             break
-        elif event.type == pygame.KEYDOWN:
+
+        if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
+                ball.trailing = not ball.trailing
 
             if event.key == pygame.K_LEFT:
-                new_x = x - vel
-                if new_x >= radius - 1:
-                    x = new_x
-                    update = True
+                ball.move(DIR_LEFT)
 
             if event.key == pygame.K_RIGHT:
-                new_x = x + vel
-                if new_x <= X_MAX - radius:
-                    x = new_x
-                    update = True
+                ball.move(DIR_RIGHT)
 
             if event.key == pygame.K_UP:
-                new_y = y - vel
-                if new_y >= radius - 1:
-                    y = new_y
-                    update = True
+                ball.move(DIR_UP)
 
             if event.key == pygame.K_DOWN:
-                new_y = y + vel
-                if new_y <= Y_MAX - radius:
-                    y = new_y
-                    update = True
-
-            if event.key == pygame.K_SPACE:
-                trailing = not trailing
-
+                ball.move(DIR_DOWN)
         else:
             print("unhandled event", event)
 
     asyncio.get_event_loop().stop()
 
+
 async def animation(window, ball):
     current_time = 0
+
     while True:
         last_time, current_time = current_time, time.time()
         await asyncio.sleep(1 / FPS - (current_time - last_time))  # tick
-# TODO here
-        #  ball.move()
-        #  screen.fill(black)
-        #  ball.draw(screen)
-        #  pygame.display.flip()
-
-#  async def otherstuff(window):
-    #  # variables
-    #  x = 50
-    #  y = 50
-    #  radius = 20
-    #  vel = 10
-    #  run = True
-    #  trailing = False
-#
-    #  # draw first circle
-#
-    #  pygame.draw.circle(window, BLUE, (x, y), radius)
-    #  pygame.display.update()
-#
-    #  run = True
-#
-    #  while run:
-        #  old_x = x
-        #  old_y = y
-#
-        #  update = False
-#
-        #  pygame.time.delay(100)
-#
-        #  if update:
-            #  if not trailing:
-                #  # erase old circle
-                #  pygame.draw.circle(window, BLACK, (old_x, old_y), radius)
-#
-            #  # draw new circle
-            #  pygame.draw.circle(window, BLUE, (x, y), radius)
-            #  pygame.display.update()
+        pygame.display.update()
 
 
 async def main():
-    event_queue = asyncio.Queue()
 
-    pygame.init()
+    event_queue = asyncio.Queue()
     window = pygame.display.set_mode((X_MAX, Y_MAX))
     pygame.display.set_caption("First Game")
 
-    ball = Ball()
+    ball = Ball(window)
 
     try:
         asyncio.gather(pygame_event_loop(event_queue),
-                       otherstuff(window), handle_events(event_queue, ball))
+                       handle_events(event_queue, ball),
+                       animation(window, ball))
     finally:
         pygame.quit()
 
 
 if __name__ == '__main__':
+    pygame.init()
+
     asyncio.run(main())
 
 #  if __name__ == '__main__':
