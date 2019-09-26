@@ -78,21 +78,8 @@ class Ball:
         self.previous_positions = []
 
 
-def pygame_event_loop(loop, event_queue):
-    """
-    Gets single event from pygame and loads onto the queue to be processed.
-    :param event_queue: the event queue to push events onto
-    """
-    while True:
-        event = pygame.event.wait()
-        asyncio.run_coroutine_threadsafe(event_queue.put(event), loop=loop)
-        #  event_queue.put_nowait(event)
-
-
-async def handle_events(event_queue, ball):
-    while True:
-        event = await event_queue.get()
-
+def handle_events(ball):
+    for event in pygame.event.get():
         if event.type == pygame.QUIT:
             break
 
@@ -114,43 +101,35 @@ async def handle_events(event_queue, ball):
         else:
             print("unhandled event", event)
 
-    asyncio.get_event_loop().stop()
 
-
-async def animation(window, ball):
-    current_time = 0
+def animation(window, ball):
+    current_time = time.time()
 
     while True:
         last_time, current_time = current_time, time.time()
-        await asyncio.sleep(1 / FPS - (current_time - last_time))  # tick
+
+        try:
+            time.sleep(1 / FPS - (current_time - last_time))  # tick
+        except Exception:
+            breakpoint()
+
+        handle_events(ball)
+        ball.draw()
         pygame.display.update()
 
 
 def main():
-    loop = asyncio.get_event_loop()
-    event_queue = asyncio.Queue()
-
     pygame.init()
-
     pygame.display.set_caption("First Game")
-
     window = pygame.display.set_mode((X_MAX, Y_MAX))
-
     ball = Ball(window)
 
-    pygame_task = loop.run_in_executor(None, pygame_event_loop, loop, event_queue)
-
     try:
-        loop.run_forever()
-        #  asyncio.gather(pygame_event_loop(event_queue),
-                       #  handle_events(event_queue, ball),
-                       #  animation(window, ball))
+        animation(window, ball)
     except KeyboardInterrupt:
         pass
     finally:
-        pygame_task.cancel()
-
-    pygame.quit()
+        pygame.quit()
 
 
 if __name__ == '__main__':
