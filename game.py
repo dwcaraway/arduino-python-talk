@@ -1,5 +1,3 @@
-import time
-import asyncio
 import pygame
 from collections import namedtuple
 
@@ -30,12 +28,14 @@ class Ball:
         self.radius = 20
         self.window = window
         self.trailing = False
-        self.velocity = 1
+        self.velocity = 5
+
+    def toggle_trail(self):
+        self.trailing = not self.trailing
 
     def move(self, direction):
-
-        update = False
         x, y = self.current_position
+        update = False
 
         if direction == DIR_UP:
             y -= self.velocity
@@ -64,58 +64,56 @@ class Ball:
             raise Exception('Invalid direction')
 
         if update:
-            self.previous_positions.push(self.current_position)
+            self.previous_positions.append(self.current_position)
             self.current_position = Position(x=x, y=y)
 
     def draw(self):
-        pygame.draw.circle(self.window, self.color,
-                           self.current_position, self.radius)
-
         if not self.trailing:
             for position in self.previous_positions:
                 pygame.draw.circle(self.window, BLACK, position, self.radius)
 
         self.previous_positions = []
 
+        pygame.draw.circle(self.window, self.color,
+                           self.current_position, self.radius)
+
 
 def handle_events(ball):
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            break
+            return False
 
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                ball.trailing = not ball.trailing
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_SPACE]:
+        ball.toggle_trail()
 
-            if event.key == pygame.K_LEFT:
-                ball.move(DIR_LEFT)
+    if keys[pygame.K_LEFT]:
+        ball.move(DIR_LEFT)
 
-            if event.key == pygame.K_RIGHT:
-                ball.move(DIR_RIGHT)
+    if keys[pygame.K_RIGHT]:
+        ball.move(DIR_RIGHT)
 
-            if event.key == pygame.K_UP:
-                ball.move(DIR_UP)
+    if keys[pygame.K_UP]:
+        ball.move(DIR_UP)
 
-            if event.key == pygame.K_DOWN:
-                ball.move(DIR_DOWN)
-        else:
-            print("unhandled event", event)
+    if keys[pygame.K_DOWN]:
+        ball.move(DIR_DOWN)
+
+    return True
 
 
 def animation(window, ball):
-    current_time = time.time()
+    running = True
 
-    while True:
-        last_time, current_time = current_time, time.time()
-
-        try:
-            time.sleep(1 / FPS - (current_time - last_time))  # tick
-        except Exception:
-            breakpoint()
-
-        handle_events(ball)
+    while running:
+        running = handle_events(ball)
         ball.draw()
         pygame.display.update()
+
+        try:
+            pygame.time.wait(100)
+        except Exception:
+            breakpoint()
 
 
 def main():
