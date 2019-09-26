@@ -78,14 +78,15 @@ class Ball:
         self.previous_positions = []
 
 
-async def pygame_event_loop(event_queue):
+def pygame_event_loop(loop, event_queue):
     """
     Gets single event from pygame and loads onto the queue to be processed.
     :param event_queue: the event queue to push events onto
     """
     while True:
         event = pygame.event.wait()
-        event_queue.put_nowait(event)
+        asyncio.run_coroutine_threadsafe(event_queue.put(event), loop=loop)
+        #  event_queue.put_nowait(event)
 
 
 async def handle_events(event_queue, ball):
@@ -125,26 +126,35 @@ async def animation(window, ball):
         pygame.display.update()
 
 
-async def main():
-
+def main():
+    loop = asyncio.get_event_loop()
     event_queue = asyncio.Queue()
-    window = pygame.display.set_mode((X_MAX, Y_MAX))
+
+    pygame.init()
+
     pygame.display.set_caption("First Game")
+
+    window = pygame.display.set_mode((X_MAX, Y_MAX))
 
     ball = Ball(window)
 
+    pygame_task = loop.run_in_executor(None, pygame_event_loop, loop, event_queue)
+
     try:
-        asyncio.gather(pygame_event_loop(event_queue),
-                       handle_events(event_queue, ball),
-                       animation(window, ball))
+        loop.run_forever()
+        #  asyncio.gather(pygame_event_loop(event_queue),
+                       #  handle_events(event_queue, ball),
+                       #  animation(window, ball))
+    except KeyboardInterrupt:
+        pass
     finally:
-        pygame.quit()
+        pygame_task.cancel()
+
+    pygame.quit()
 
 
 if __name__ == '__main__':
-    pygame.init()
-
-    asyncio.run(main())
+    main()
 
 #  if __name__ == '__main__':
     #  loop = asyncio.get_event_loop()
