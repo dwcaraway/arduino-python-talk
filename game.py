@@ -81,12 +81,16 @@ class Ball:
                            self.current_position, self.radius)
 
 
-def handle_events(ball):
+def handle_events(window, ball):
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             return False
 
     keys = pygame.key.get_pressed()
+
+    if keys[pygame.K_r]:
+        window.fill(BLACK)
+
     if keys[pygame.K_SPACE]:
         ball.toggle_trail()
 
@@ -109,14 +113,11 @@ def animation(window, ball):
     running = True
 
     while running:
-        running = handle_events(ball)
+        running = handle_events(window, ball)
         ball.draw()
         pygame.display.update()
 
-        try:
-            pygame.time.wait(100)
-        except Exception:
-            breakpoint()
+        pygame.time.wait(50)
 
 
 async def printstuff(message='hello'):
@@ -125,10 +126,6 @@ async def printstuff(message='hello'):
         print(f'printstuff Threads = {threading.active_count()}, id = {threading.get_ident()}')
         print(message)
         await asyncio.sleep(1)
-
-def foo(message):
-    asyncio.run(printstuff(message))
-
 
 def main():
     pygame.init()
@@ -139,9 +136,9 @@ def main():
     print(f'Threads = {threading.active_count()}, id = {threading.get_ident()}')
 
     try:
+        import joystick
         # creating thread
-        t1 = threading.Thread(target=foo, args=('thread?',))
-
+        t1 = threading.Thread(target=joystick.main, args=(asyncio.new_event_loop(),))
         t1.start()
 
         animation(window, ball)
@@ -155,13 +152,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-#  if __name__ == '__main__':
-    #  loop = asyncio.get_event_loop()
-    #  board = PymataExpress()
-#
-    #  try:
-        #  loop.run_until_complete(main(board))
-    #  except KeyboardInterrupt:
-        #  # Currently we exit by using CTRL+C, so hide the error
-        #  pass
