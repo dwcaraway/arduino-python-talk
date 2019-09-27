@@ -1,5 +1,8 @@
+import asyncio
 import pygame
 from collections import namedtuple
+import concurrent.futures
+import threading
 
 Color = namedtuple('Color', 'red green blue')
 Position = namedtuple('Position', 'x y')
@@ -116,18 +119,38 @@ def animation(window, ball):
             breakpoint()
 
 
+async def printstuff(message='hello'):
+    t = threading.currentThread()
+    while getattr(t, "do_run", True):
+        print(f'printstuff Threads = {threading.active_count()}, id = {threading.get_ident()}')
+        print(message)
+        await asyncio.sleep(1)
+
+def foo(message):
+    asyncio.run(printstuff(message))
+
+
 def main():
     pygame.init()
     pygame.display.set_caption("First Game")
     window = pygame.display.set_mode((X_MAX, Y_MAX))
     ball = Ball(window)
 
+    print(f'Threads = {threading.active_count()}, id = {threading.get_ident()}')
+
     try:
+        # creating thread
+        t1 = threading.Thread(target=foo, args=('thread?',))
+
+        t1.start()
+
         animation(window, ball)
     except KeyboardInterrupt:
         pass
     finally:
         pygame.quit()
+        t1.do_run = False
+        t1.join()
 
 
 if __name__ == '__main__':
