@@ -2,6 +2,7 @@ import asyncio
 import pygame
 from collections import namedtuple
 import threading
+from random import randint
 
 Color = namedtuple('Color', 'red green blue')
 Position = namedtuple('Position', 'x y')
@@ -28,7 +29,6 @@ J_LEFT = pygame.USEREVENT + 3
 J_RIGHT = pygame.USEREVENT + 4
 # Joystick click down
 J_SWITCH = pygame.USEREVENT + 5
-
 
 class Ball:
     """
@@ -81,6 +81,12 @@ class Ball:
             self.previous_positions.append(self.current_position)
             self.current_position = Position(x=x, y=y)
 
+    def toggle_color(self):
+        if self.color == BLUE:
+            self.color = Color(randint(0, 255), randint(0, 255), randint(0, 255))
+        else:
+            self.color = BLUE
+
     def draw(self):
         if not self.trailing:
             for position in self.previous_positions:
@@ -110,7 +116,7 @@ def handle_events(window, ball):
             ball.move(DIR_RIGHT)
 
         if event.type == J_SWITCH:
-            print('SWITCH!')
+            ball.toggle_color()
 
     keys = pygame.key.get_pressed()
 
@@ -193,9 +199,9 @@ def main():
     except KeyboardInterrupt:
         pass
     finally:
-        pygame.quit()
         arduino_thread.do_run = False
         arduino_thread.join()
+        pygame.quit()
 
 
 if __name__ == '__main__':

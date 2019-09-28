@@ -83,14 +83,15 @@ async def print_vals(cb=None):
     """
     t = threading.current_thread()
     while getattr(t, 'do_run', True):
-        print(f'X-Axis: {storage[X_PIN]}, Y-Axis: {storage[Y_PIN]}, '
-              f'Switch: {storage[SW_PIN]}     ', end='\r')
 
         if cb:
             jsd = JoystickData(storage[X_PIN], storage[Y_PIN], storage[SW_PIN])
             await cb(jsd)
+        else:
+            print(f'X-Axis: {storage[X_PIN]}, Y-Axis: {storage[Y_PIN]}, '
+                  f'Switch: {storage[SW_PIN]}     ', end='\r')
 
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0.05)
 
     asyncio.get_event_loop().stop()
 
