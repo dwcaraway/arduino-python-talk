@@ -4,6 +4,7 @@ from pymata_express.pymata_express import PymataExpress
 from collections import namedtuple
 
 Bound = namedtuple('Bound', 'lower upper')
+JoystickData = namedtuple('JoystickData', 'x y switch')
 
 # Switch digital input
 SW_PIN = 2
@@ -74,13 +75,24 @@ async def switch_handler(data):
     storage[data[0]] = 1 - data[1]
 
 
-async def print_vals():
+async def print_vals(cb=None):
+    """
+    Prints storage values to screen.
+    Runs until threads do_run is set to false
+    : param cb: optional async call back function
+    """
     t = threading.current_thread()
     while getattr(t, 'do_run', True):
         print(f'X-Axis: {storage[X_PIN]}, Y-Axis: {storage[Y_PIN]}, '
-                f'Switch: {storage[SW_PIN]}     ', end='\r')
+              f'Switch: {storage[SW_PIN]}     ', end='\r')
+
+        if cb:
+            jsd = JoystickData(storage[X_PIN], storage[Y_PIN], storage[SW_PIN])
+            await cb(jsd)
+
         await asyncio.sleep(0.1)
-    asyncio.get_event_loop.stop()
+
+    asyncio.get_event_loop().stop()
 
 
 def main(event_loop, cb=None):
@@ -104,7 +116,7 @@ def main(event_loop, cb=None):
 
         event_loop.run_until_complete(pin_setup_task)
 
-        reporting_task = asyncio.ensure_future(print_vals())
+        reporting_task = asyncio.ensure_future(print_vals(cb))
 
         # Now loop forever printing the recorded values
         # from the handlers (callbacks)

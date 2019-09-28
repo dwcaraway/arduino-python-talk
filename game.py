@@ -17,6 +17,18 @@ DIR_DOWN = 'down'
 DIR_LEFT = 'left'
 DIR_RIGHT = 'right'
 
+# Custom pygame event types for joystick
+# Joystick pressed up (positive y)
+J_UP = pygame.USEREVENT + 1
+# Joystick pressed down (negative y)
+J_DOWN = pygame.USEREVENT + 2
+# Joystick pressed left (negative x)
+J_LEFT = pygame.USEREVENT + 3
+# Joystick pressed right (positive x)
+J_RIGHT = pygame.USEREVENT + 4
+# Joystick click down
+J_SWITCH = pygame.USEREVENT + 5
+
 
 class Ball:
     """
@@ -85,6 +97,21 @@ def handle_events(window, ball):
         if event.type == pygame.QUIT:
             return False
 
+        if event.type == J_UP:
+            ball.move(DIR_UP)
+
+        if event.type == J_DOWN:
+            ball.move(DIR_DOWN)
+
+        if event.type == J_LEFT:
+            ball.move(DIR_LEFT)
+
+        if event.type == J_RIGHT:
+            ball.move(DIR_RIGHT)
+
+        if event.type == J_SWITCH:
+            print('SWITCH!')
+
     keys = pygame.key.get_pressed()
 
     if keys[pygame.K_r]:
@@ -119,12 +146,30 @@ def animation(window, ball):
         pygame.time.wait(50)
 
 
-async def joystick_callback():
+async def joystick_callback(data):
     """
-    Called with joystick events, adds them to the pygame event queue
+    Called with joystick X/y/switch value object
+    Creates joystick events and adds to the que.
+
+    :param data: a JoystickData
     """
-    #  pygame.event.post()
-    pass
+    if data.x > 0:
+        ev = pygame.event.Event(J_RIGHT)
+        pygame.event.post(ev)
+    elif data.x < 0:
+        ev = pygame.event.Event(J_LEFT)
+        pygame.event.post(ev)
+
+    if data.y > 0:
+        ev = pygame.event.Event(J_UP)
+        pygame.event.post(ev)
+    elif data.y < 0:
+        ev = pygame.event.Event(J_DOWN)
+        pygame.event.post(ev)
+
+    if data.switch:
+        ev = pygame.event.Event(J_SWITCH)
+        pygame.event.post(ev)
 
 
 def main():
