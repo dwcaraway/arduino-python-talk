@@ -1,7 +1,6 @@
 import asyncio
 import pygame
 from collections import namedtuple
-import concurrent.futures
 import threading
 
 Color = namedtuple('Color', 'red green blue')
@@ -120,12 +119,13 @@ def animation(window, ball):
         pygame.time.wait(50)
 
 
-async def printstuff(message='hello'):
-    t = threading.currentThread()
-    while getattr(t, "do_run", True):
-        print(f'printstuff Threads = {threading.active_count()}, id = {threading.get_ident()}')
-        print(message)
-        await asyncio.sleep(1)
+async def joystick_callback():
+    """
+    Called with joystick events, adds them to the pygame event queue
+    """
+    #  pygame.event.post()
+    pass
+
 
 def main():
     pygame.init()
@@ -133,21 +133,24 @@ def main():
     window = pygame.display.set_mode((X_MAX, Y_MAX))
     ball = Ball(window)
 
-    print(f'Threads = {threading.active_count()}, id = {threading.get_ident()}')
-
     try:
         import joystick
         # creating thread
-        t1 = threading.Thread(target=joystick.main, args=(asyncio.new_event_loop(),))
-        t1.start()
+        arduino_loop = asyncio.new_event_loop(),
+        arduino_thread = threading.Thread(
+                target=joystick.main,
+                args=(arduino_loop),
+                kwargs={'cb': joystick_callback}
+        )
+        arduino_thread.start()
 
         animation(window, ball)
     except KeyboardInterrupt:
         pass
     finally:
         pygame.quit()
-        t1.do_run = False
-        t1.join()
+        arduino_thread.do_run = False
+        arduino_thread.join()
 
 
 if __name__ == '__main__':

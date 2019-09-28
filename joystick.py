@@ -87,7 +87,7 @@ def main(event_loop, cb=None):
     """
     Processes the joystick analog and digital inputs
     :param event_loop: the event loop to use for execution
-    :param cb: an optional callback lop to use
+    :param cb: an optional async callback to use
     """
     asyncio.set_event_loop(event_loop)
     board = PymataExpress()
