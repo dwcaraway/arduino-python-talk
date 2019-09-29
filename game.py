@@ -3,6 +3,8 @@ import pygame
 from collections import namedtuple
 import threading
 from random import randint
+from threading import Timer
+import time
 
 Color = namedtuple('Color', 'red green blue')
 Position = namedtuple('Position', 'x y')
@@ -30,6 +32,27 @@ J_RIGHT = pygame.USEREVENT + 4
 # Joystick click down
 J_SWITCH = pygame.USEREVENT + 5
 
+
+def debounce(wait):
+    """ Decorator that will postpone a functions
+        execution until after wait seconds
+        have elapsed since the last time it was invoked.
+    :param wait: the number of seconds to wait
+    """
+    def decorator(fn):
+        def debounced(*args, **kwargs):
+            def call_it():
+                fn(*args, **kwargs)
+            try:
+                debounced.t.cancel()
+            except(AttributeError):
+                pass
+            debounced.t = Timer(wait, call_it)
+            debounced.t.start()
+        return debounced
+    return decorator
+
+
 class Ball:
     """
     The ball object to manipulate
@@ -44,6 +67,7 @@ class Ball:
         self.trailing = False
         self.velocity = 5
 
+    @debounce(0.8)
     def toggle_trail(self):
         self.trailing = not self.trailing
 
@@ -179,10 +203,6 @@ async def joystick_callback(data):
 
 
 def main():
-    pygame.init()
-    pygame.display.set_caption("First Game")
-    window = pygame.display.set_mode((X_MAX, Y_MAX))
-    ball = Ball(window)
 
     try:
         import joystick
@@ -195,8 +215,16 @@ def main():
         )
         arduino_thread.start()
 
+        time.sleep(5)  # Sleep pygame 4 seconds to allow arduino to boot
+
+        pygame.init()
+        pygame.display.set_caption("Joystick Demo")
+        window = pygame.display.set_mode((X_MAX, Y_MAX))
+        ball = Ball(window)
+
         animation(window, ball)
     except KeyboardInterrupt:
+        # hide the keyboard interrupt
         pass
     finally:
         arduino_thread.do_run = False

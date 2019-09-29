@@ -83,7 +83,6 @@ async def print_vals(cb=None):
     """
     t = threading.current_thread()
     while getattr(t, 'do_run', True):
-
         if cb:
             jsd = JoystickData(storage[X_PIN], storage[Y_PIN], storage[SW_PIN])
             await cb(jsd)
@@ -92,8 +91,6 @@ async def print_vals(cb=None):
                   f'Switch: {storage[SW_PIN]}     ', end='\r')
 
         await asyncio.sleep(0.05)
-
-    asyncio.get_event_loop().stop()
 
 
 def main(event_loop, cb=None):
@@ -124,8 +121,16 @@ def main(event_loop, cb=None):
         event_loop.run_until_complete(reporting_task)
 
     except KeyboardInterrupt:
+        # hide the keyboard interrupt
+        pass
+    finally:
+
+        for task in asyncio.Task.all_tasks():
+            task.cancel()
+
         event_loop.run_until_complete(board.shutdown())
-        reporting_task.cancel()
+
+        event_loop.stop()
 
 
 if __name__ == '__main__':
