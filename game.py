@@ -67,7 +67,6 @@ class Ball:
         self.trailing = False
         self.velocity = 5
 
-    @debounce(0.8)
     def toggle_trail(self):
         self.trailing = not self.trailing
 
@@ -105,6 +104,7 @@ class Ball:
             self.previous_positions.append(self.current_position)
             self.current_position = Position(x=x, y=y)
 
+    @debounce(0.3)
     def toggle_color(self):
         if self.color == BLUE:
             self.color = Color(randint(0, 255), randint(0, 255), randint(0, 255))

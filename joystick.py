@@ -32,7 +32,7 @@ Y_DOWN_BOUNDS = Bound(520, 1022)
 
 # Hold last read pin values in storage. Values are keyed by the pin number.
 # TODO need better (threadsafe) storage mechanism
-storage = {X_PIN: 0, Y_PIN: 0, SW_PIN: 0}
+storage = {X_PIN: 512, 'X_DIR': 0, Y_PIN: 512, 'Y_DIR': 0, SW_PIN: 1, 'SW_VAL': 0}
 
 
 async def x_handler(data):
@@ -47,7 +47,8 @@ async def x_handler(data):
     elif data[1] > X_FORWARD_BOUNDS.lower:
         val = 1
 
-    storage[data[0]] = val
+    storage[data[0]] = data[1]
+    storage['X_DIR'] = val
 
 
 async def y_handler(data):
@@ -62,7 +63,8 @@ async def y_handler(data):
         val = 1
     elif data[1] > Y_DOWN_BOUNDS.lower:
         val = -1
-    storage[data[0]] = val
+    storage[data[0]] = data[1]
+    storage['Y_DIR'] = val
 
 
 async def switch_handler(data):
@@ -72,7 +74,8 @@ async def switch_handler(data):
     """
     # the switch goes to 0 when pressed, we flip it so that
     # pressed is 1 and not pressed is 0
-    storage[data[0]] = 1 - data[1]
+    storage[data[0]] = data[1]
+    storage['SW_VAL'] = 1 - data[1]
 
 
 async def print_vals(cb=None):
@@ -84,14 +87,13 @@ async def print_vals(cb=None):
     t = threading.current_thread()
     while getattr(t, 'do_run', True):
         if cb:
-            jsd = JoystickData(storage[X_PIN], storage[Y_PIN], storage[SW_PIN])
-            await cb(jsd)
+            jsd = JoystickData(storage['X_DIR'], storage['Y_DIR'], storage['SW_VAL'])
+            await cb(jsd)  # Sends joystick data back through callback function
         else:
             print(f'X-Axis: {storage[X_PIN]}, Y-Axis: {storage[Y_PIN]}, '
                   f'Switch: {storage[SW_PIN]}     ', end='\r')
 
-        await asyncio.sleep(0.05)
-
+        await asyncio.sleep(0.1)
 
 def main(event_loop, cb=None):
     """
